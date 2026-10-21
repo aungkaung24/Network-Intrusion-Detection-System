@@ -1,15 +1,20 @@
-from scapy.all import sniff, IP, TCP, UDP
+from scapy.all import sniff, IP, TCP
 from collections import defaultdict
 import time
 
-# Store packet counts for each IP
+# High traffic detection
 packet_count = defaultdict(int)
 
-# Track when the current monitoring window started
-start_time = time.time()
-
-# Alert threshold
 THRESHOLD = 100
+
+# Port scan detection
+port_scan = defaultdict(list)
+
+PORT_THRESHOLD = 5
+PORT_WINDOW = 10
+
+# Track time
+start_time = time.time()
 
 
 def packet_callback(packet):
@@ -21,55 +26,82 @@ def packet_callback(packet):
         source_ip = packet[IP].src
         destination_ip = packet[IP].dst
 
-        # Count packets from each source IP
+        current_time = time.time()
+
+        # Count packets
         packet_count[source_ip] += 1
 
-        print("\n---------------------------")
-        print("New Packet Detected")
-        print("---------------------------")
-
-        print("Source IP:", source_ip)
-        print("Destination IP:", destination_ip)
-
+        # PORT SCAN DETECTION
         if TCP in packet:
-            print("Protocol: TCP")
-            print("Source Port:", packet[TCP].sport)
-            print("Destination Port:", packet[TCP].dport)
 
-        elif UDP in packet:
-            print("Protocol: UDP")
-            print("Source Port:", packet[UDP].sport)
-            print("Destination Port:", packet[UDP].dport)
+            destination_port = packet[TCP].dport
 
-        else:
-            print("Protocol: Other")
+            # Check for TCP SYN without ACK
+            flags = packet[TCP].flags
 
-    # Check whether one second has passed
+            if flags & 0x02 and not flags & 0x10:
+
+                # Save destination port and time
+                port_scan[source_ip].append(
+                    (destination_ip, destination_port, current_time)
+                )
+
+                # Remove entries older than 10 seconds
+                port_scan[source_ip] = [
+                    entry for entry in port_scan[source_ip]
+                    if current_time - entry[2] <= PORT_WINDOW
+                ]
+
+                # Count unique destination ports
+                unique_ports = {
+                    entry[1]
+                    for entry in port_scan[source_ip]
+                    if entry[0] == destination_ip
+                }
+
+                if len(unique_ports) >= PORT_THRESHOLD:
+
+                    print("\n==============================")
+                    print("PORT SCAN ALERT!")
+                    print("==============================")
+                    print("Source IP:", source_ip)
+                    print("Target IP:", destination_ip)
+                    print("Ports Detected:", sorted(unique_ports))
+                    print("Status: POSSIBLE PORT SCAN")
+                    print("==============================\n")
+
+                    # Clear entries for this target to avoid repeated alerts
+                    port_scan[source_ip] = [
+                        entry for entry in port_scan[source_ip]
+                        if entry[0] != destination_ip
+                    ]
+
+    # HIGH TRAFFIC DETECTION
     current_time = time.time()
 
     if current_time - start_time >= 1:
 
-        # Check packet counts for every source IP
+        print("\n===== PACKET COUNT =====")
+
         for ip, count in packet_count.items():
+
+            print("IP:", ip, "| Packets:", count)
 
             if count > THRESHOLD:
 
-                print("\n================================")
-                print("SECURITY ALERT")
-                print("================================")
-                print("Suspicious High Network Traffic!")
+                print("\n==============================")
+                print("HIGH TRAFFIC ALERT!")
+                print("==============================")
                 print("Source IP:", ip)
                 print("Packets:", count)
-                print("Status: SUSPICIOUS")
-                print("================================\n")
+                print("==============================\n")
 
-        # Reset counts for the next second
         packet_count.clear()
         start_time = current_time
 
 
 print("Network Intrusion Detection System")
-print("Starting network monitoring...")
+print("Monitoring network traffic...")
 print("Press CTRL + C to stop.")
 
 sniff(prn=packet_callback, store=False)
