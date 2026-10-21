@@ -100,8 +100,10 @@ def packet_callback(packet):
         start_time = current_time
 
 
-print("Network Intrusion Detection System")
-print("Monitoring network traffic...")
-print("Press CTRL + C to stop.")
+if __name__ == "__main__":
 
-sniff(prn=packet_callback, store=False)
+    print("Network Intrusion Detection System")
+    print("Monitoring network traffic...")
+    print("Press CTRL + C to stop.")
+
+    sniff(prn=packet_callback, store=False)
