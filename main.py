@@ -1,5 +1,6 @@
 from scapy.all import sniff, IP, TCP
 from collections import defaultdict
+from alert_logger import save_alert
 import time
 
 # High traffic detection
@@ -69,6 +70,13 @@ def packet_callback(packet):
                     print("Ports Detected:", sorted(unique_ports))
                     print("Status: POSSIBLE PORT SCAN")
                     print("==============================\n")
+
+                    save_alert(
+                                "PORT_SCAN",
+                                source_ip,
+                                destination_ip,
+                                f"Ports detected: {sorted(unique_ports)}"
+                            )
 
                     # Clear entries for this target to avoid repeated alerts
                     port_scan[source_ip] = [
