@@ -221,3 +221,9 @@ __marimo__/
 
 # Network Intrusion Detection System
 security_alerts.csv
+
+# NIDS database
+security_alerts.db
+security_alerts.db-journal
+security_alerts.db-wal
+security_alerts.db-shm
