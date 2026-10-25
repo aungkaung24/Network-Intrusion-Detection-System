@@ -1,11 +1,23 @@
 from fastapi import FastAPI
 from database import view_alerts
-
+from fastapi.middleware.cors import CORSMiddleware
 # Create FastAPI application
 app = FastAPI(
     title="Network Intrusion Detection System",
     description="Cybersecurity monitoring API",
     version="1.0.0"
+)
+
+# Allow React frontend to communicate with FastAPI
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173"
+    ],
+    allow_credentials=False,
+    allow_methods=["GET"],
+    allow_headers=["*"]
 )
 
 
@@ -35,19 +47,16 @@ def get_alerts():
             "details": alert[5],
             "severity": alert[6]
         })
-# Get the five most recent security alerts
 @app.get("/alerts/recent")
 def get_recent_alerts():
 
     alerts = view_alerts()
 
-    # Select only the latest five alerts
     recent_alerts = alerts[:5]
 
     results = []
 
     for alert in recent_alerts:
-
         results.append({
             "id": alert[0],
             "timestamp": alert[1],
@@ -57,6 +66,8 @@ def get_recent_alerts():
             "details": alert[5],
             "severity": alert[6]
         })
+
+    return results
 
 # Get security alert statistics
 @app.get("/alerts/statistics")
