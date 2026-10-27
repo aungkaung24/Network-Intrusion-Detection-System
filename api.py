@@ -99,6 +99,33 @@ def get_statistics():
         "port_scan_alerts": port_scan_count,
         "high_traffic_alerts": high_traffic_count
     }
+# Security severity statistics
+@app.get("/alerts/severity")
+def get_severity_statistics():
 
+    alerts = view_alerts()
+
+    low_count = 0
+    medium_count = 0
+    high_count = 0
+
+    for alert in alerts:
+
+        severity = alert[6]
+
+        if severity == "LOW":
+            low_count += 1
+
+        elif severity == "MEDIUM":
+            medium_count += 1
+
+        elif severity == "HIGH":
+            high_count += 1
+
+    return {
+        "low": low_count,
+        "medium": medium_count,
+        "high": high_count
+    }
 
     
