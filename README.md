@@ -17,6 +17,12 @@ When suspicious activity is detected, the system generates an alert and stores t
 
 A React dashboard displays security statistics, alert severity, and recent security events.
 
+## 📸 Dashboard Preview
+
+The Network Intrusion Detection System includes a React dashboard displaying security alerts, traffic statistics, and severity analysis.
+
+![NIDS Security Monitoring Dashboard](screenshots/dashboard.png)
+
 ## 🚀 Features
 
 ### 1. Network Packet Monitoring
